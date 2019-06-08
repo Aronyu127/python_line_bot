@@ -19,12 +19,16 @@ from linebot.models import (
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
 LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET')
-LINE_TARGET_ID = os.environ.get('LINE_TARGET_ID')
 IMGUR_CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID')
-IMGUR_ACCESS_TOKEN = os.environ.get('IMGUR_ACCESS_TOKEN')
-IMGUR_BEAUTY_ALBUM_ID = os.environ.get('IMGUR_BEAUTY_ALBUM_ID')
-IMGUR_IMAGE_SOURCE_ALBUM_ID = os.environ.get('IMGUR_IMAGE_SOURCE_ALBUM_ID')
-IMGUR_UPLOAD_ALBUM_ID = os.environ.get('IMGUR_UPLOAD_ALBUM_ID')
+
+#for collect and upload image
+LINE_TARGET_ID = os.environ.get('LINE_TARGET_ID')
+GOOD_MORNING_ALBUM_ID = os.environ.get('GOOD_MORNING_ALBUM_ID')
+
+BEAUTY_ALBUM_ID = os.environ.get('BEAUTY_ALBUM_ID')
+MAIN_ALBUM_ID = os.environ.get('MAIN_ALBUM_ID')
+
+imgur_header = {'Authorization': 'Client-ID %s' % IMGUR_CLIENT_ID}
  
 def main(request):
     line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
@@ -50,15 +54,15 @@ def main(request):
         if isinstance(event.message, ImageMessage) and (event.source.type == 'room' and event.source.user_id == LINE_TARGET_ID):
             image_message_id = event.message.id
             image_content = line_bot_api.get_message_content(image_message_id).content
-            upload_image(image_content, IMGUR_UPLOAD_ALBUM_ID)
+            upload_image(image_content, GOOD_MORNING_ALBUM_ID)
         elif isinstance(event.message, TextMessage): 
           text = event.message.text
           if text == '抽':
             #美女相簿全部
-            images = get_images(IMGUR_BEAUTY_ALBUM_ID)
+            images = get_images(BEAUTY_ALBUM_ID)
           else:
             #一般相簿先找尋描述相同的
-            images = [image for image in get_images(IMGUR_IMAGE_SOURCE_ALBUM_ID) if image['description'] == text]
+            images = [image for image in get_images(MAIN_ALBUM_ID) if image['description'] == text]
           image_url = random.choice(images)['link']
           line_bot_api.reply_message(
               event.reply_token,
@@ -67,18 +71,14 @@ def main(request):
     return jsonify({ 'message': 'ok'})
 
 def get_images(target_album_id="SUbZW0d"):
-    imgur_authorization = 'Client-ID %s' % IMGUR_CLIENT_ID
     request_url = 'https://api.imgur.com/3/album/%s/images' % target_album_id
-    headers = {'Authorization': imgur_authorization}
-    response = requests.get(request_url, headers = headers)
+    response = requests.get(request_url, headers = imgur_header)
     data = json.loads(response.text)
     images = data['data']
     return images
 
 def upload_image(file, target_album_id="vr5Ryga"):
-    imgur_authorization = 'Bearer %s' % IMGUR_ACCESS_TOKEN
-    headers = {'Authorization': imgur_authorization}
     request_url = 'https://api.imgur.com/3/image'
-    data = { "image": file, "album": target_album_id, "type": 'file' }
-    response = requests.post(request_url, headers = headers, data = data)
+    request_body = { "image": file, "album": target_album_id, "type": 'file' }
+    response = requests.post(request_url, headers = imgur_header, data = request_body)
     return response
