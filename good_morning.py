@@ -18,6 +18,7 @@ from linebot.models import (
 )
 
 LINE_CHANNEL_ACCESS_TOKEN = os.environ.get('LINE_CHANNEL_ACCESS_TOKEN')
+LINE_CHANNEL_SECRET = os.environ.get('LINE_CHANNEL_SECRET')
 LINE_TARGET_ID = os.environ.get('LINE_TARGET_ID')
 IMGUR_CLIENT_ID = os.environ.get('IMGUR_CLIENT_ID')
 GOOD_MORNING_ALBUM_ID = os.environ.get('GOOD_MORNING_ALBUM_ID')
