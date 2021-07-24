@@ -63,15 +63,22 @@ def main(request):
           uniq_desc_list = list(set(desc_list))
           reply_instance = TextSendMessage(text=','.join(uniq_desc_list))
         else:
-          #從一般相簿中過濾 or 從美女相簿中隨機
-          images = ([image for image in get_images(MAIN_ALBUM_ID) if image['description'] == text], get_images(BEAUTY_ALBUM_ID))[text == '抽']
-          image_url = random.choice(images)['link']
-          reply_instance = ImageSendMessage(original_content_url=image_url, preview_image_url=image_url)
-        
-        line_bot_api.reply_message(
-            event.reply_token,
-            reply_instance
-        )
+            #從一般相簿中過濾 or 從美女相簿中隨機
+            if text == '抽':
+              images = get_images(BEAUTY_ALBUM_ID)
+            else:
+              images = [image for image in get_images(MAIN_ALBUM_ID) if image['description'] == text]
+
+            if len(images) == 0:
+              return 'do nothing'
+            else:
+              image_url = random.choice(images)['link']
+              reply_instance = ImageSendMessage(original_content_url=image_url, preview_image_url=image_url)
+                
+              line_bot_api.reply_message(
+                event.reply_token,
+                reply_instance
+              )
     return jsonify({ 'message': 'ok'})
 
 def get_images(target_album_id="SUbZW0d"):
